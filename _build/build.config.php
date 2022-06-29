@@ -1,7 +1,7 @@
 <?php
 
 /* define package */
-const PKG_NAME = 'PayPal';
+const PKG_NAME = 'mspPayPal';
 define('PKG_NAME_LOWER', strtolower(PKG_NAME));
 
 const PKG_VERSION = '1.0.0';

@@ -1,7 +1,7 @@
 <?php
 
 /**
- * PayPal build script
+ * mspPayPal build script
  *
  * @package paypal
  * @subpackage build

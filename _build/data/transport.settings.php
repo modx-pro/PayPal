@@ -9,51 +9,51 @@
 $settings = [];
 
 $tmp = [
-    'ms2_payment_paypal_api_url' => array(
+    'ms2_payment_paypal_api_url' => [
         'value' => 'https://api-3t.paypal.com/nvp',
         'xtype' => 'textfield',
         'area' => 'ms2_payment',
-    ),
-    'ms2_payment_paypal_checkout_url' => array(
+    ],
+    'ms2_payment_paypal_checkout_url' => [
         'value' => 'https://www.paypal.com/webscr?cmd=_express-checkout&token=',
         'xtype' => 'textfield',
         'area' => 'ms2_payment',
-    ),
-    'ms2_payment_paypal_currency' => array(
+    ],
+    'ms2_payment_paypal_currency' => [
         'value' => 'USD',
         'xtype' => 'textfield',
         'area' => 'ms2_payment',
-    ),
-    'ms2_payment_paypal_user' => array(
+    ],
+    'ms2_payment_paypal_user' => [
         'value' => '',
         'xtype' => 'textfield',
         'area' => 'ms2_payment',
-    ),
-    'ms2_payment_paypal_pwd' => array(
+    ],
+    'ms2_payment_paypal_pwd' => [
         'value' => '',
         'xtype' => 'text-password',
         'area' => 'ms2_payment',
-    ),
-    'ms2_payment_paypal_signature' => array(
+    ],
+    'ms2_payment_paypal_signature' => [
         'value' => '',
         'xtype' => 'text-password',
         'area' => 'ms2_payment',
-    ),
-    'ms2_payment_paypal_success_id' => array(
+    ],
+    'ms2_payment_paypal_success_id' => [
         'value' => '',
         'xtype' => 'numberfield',
         'area' => 'ms2_payment',
-    ),
-    'ms2_payment_paypal_cancel_id' => array(
+    ],
+    'ms2_payment_paypal_cancel_id' => [
         'value' => '',
         'xtype' => 'numberfield',
         'area' => 'ms2_payment',
-    ),
-    'ms2_payment_paypal_cancel_order' => array(
+    ],
+    'ms2_payment_paypal_cancel_order' => [
         'value' => false,
         'xtype' => 'combo-boolean',
         'area' => 'ms2_payment',
-    ),
+    ],
 ];
 
 foreach ($tmp as $k => $v) {

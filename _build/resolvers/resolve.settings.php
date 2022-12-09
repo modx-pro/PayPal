@@ -13,11 +13,11 @@ if ($object->xpdo) {
 
             if (!$payment) {
                 $q = $modx->newObject(msPayment::class);
-                $q->fromArray(array(
+                $q->fromArray([
                     'name' => 'PayPal',
                     'active' => 0,
                     'class' => 'PayPal'
-                ));
+                ]);
                 $save = $q->save();
             }
 
@@ -43,7 +43,7 @@ if ($object->xpdo) {
             if ($payment) {
                 $payment->remove();
             }
-            $modx->removeCollection(modSystemSetting::class, array('key:LIKE' => 'ms2\_payment\_rb\_%'));
+            $modx->removeCollection(modSystemSetting::class, ['key:LIKE' => 'ms2\_payment\_rb\_%']);
             break;
     }
 }

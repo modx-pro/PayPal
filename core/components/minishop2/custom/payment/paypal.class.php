@@ -6,14 +6,13 @@ if (!class_exists('msPaymentInterface')) {
 
 class PayPal extends msPaymentHandler implements msPaymentInterface
 {
-
     /**
-    * PayPal constructor.
-    *
-    * @param xPDOObject $object
-    * @param array $config
-    */
-    function __construct(xPDOObject $object, $config = array())
+     * PayPal constructor.
+     *
+     * @param xPDOObject $object
+     * @param array $config
+     */
+    public function __construct(xPDOObject $object, $config = [])
     {
         parent::__construct($object, $config);
 
@@ -21,7 +20,7 @@ class PayPal extends msPaymentHandler implements msPaymentInterface
         $assetsUrl = $this->modx->getOption('assets_url') . 'components/minishop2/';
         $paymentUrl = $siteUrl . substr($assetsUrl, 1) . 'payment/paypal.php';
 
-        $this->config = array_merge(array(
+        $this->config = array_merge([
             'paymentUrl' => $paymentUrl,
             'apiUrl' => $this->modx->getOption('ms2_payment_paypal_api_url', null, 'https://api-3t.paypal.com/nvp'),
             'checkoutUrl' => $this->modx->getOption(
@@ -34,21 +33,21 @@ class PayPal extends msPaymentHandler implements msPaymentInterface
             'password' => $this->modx->getOption('ms2_payment_paypal_pwd'),
             'signature' => $this->modx->getOption('ms2_payment_paypal_signature'),
             'json_response' => false,
-        ), $config);
+        ], $config);
     }
 
-
     /**
-    * @param msOrder $order
-    *
-    * @return array|string
-    */
+     * @param msOrder $order
+     *
+     * @return array|string
+     */
     public function send(msOrder $order)
     {
-        if ($order->get('status') > 1) {
+        $status_new = $this->modx->getOption('ms2_status_new', null, 1);
+        if ($order->get('status') > $status_new) {
             return $this->error('ms2_err_status_wrong');
         }
-        $params = array(
+        $params = [
             'METHOD' => 'SetExpressCheckout',
             'PAYMENTREQUEST_0_CURRENCYCODE' => $this->config['currency'],
             'PAYMENTREQUEST_0_ITEMAMT' => str_replace(',', '.', $order->get('cart_cost')),
@@ -57,16 +56,18 @@ class PayPal extends msPaymentHandler implements msPaymentInterface
             'RETURNURL' => $this->config['paymentUrl'] . '?action=success',
             'CANCELURL' => $this->config['paymentUrl'] . '?action=cancel',
             'PAYMENTREQUEST_0_INVNUM' => $order->get('id'),
-        );
+        ];
 
         /** @var msOrderProduct $item */
         $i = 0;
-        if ($this->modx->getOption('ms2_payment_paypal_order_details', null, true)) {
+        $order_details = $this->modx->getOption('ms2_payment_paypal_order_details', null, true);
+        if ($order_details) {
             $products = $order->getMany('Products');
             foreach ($products as $item) {
                 /** @var msProduct $product */
+                $product = $item->getOne('Product');
                 $name = $item->get('name');
-                if (empty($name) && $product = $item->getOne('Product')) {
+                if (empty($name) && $product) {
                     $name = $product->get('pagetitle');
                 }
                 $params['L_PAYMENTREQUEST_0_NAME' . $i] = $name;
@@ -80,11 +81,11 @@ class PayPal extends msPaymentHandler implements msPaymentInterface
         if (is_array($response) && !empty($response['ACK']) && $response['ACK'] == 'Success') {
             $token = $response['TOKEN'];
 
-            return $this->success('', array('redirect' => $this->config['checkoutUrl'] . urlencode($token)));
+            return $this->success('', ['redirect' => $this->config['checkoutUrl'] . urlencode($token)]);
         } else {
             $this->modx->log(
                 modX::LOG_LEVEL_ERROR,
-                '[miniShop2] Payment error while request. Request: ' . print_r(
+                '[PayPal] Payment error while request. Request: ' . print_r(
                     $params,
                     1
                 ) . ', response: ' . print_r(
@@ -93,21 +94,20 @@ class PayPal extends msPaymentHandler implements msPaymentInterface
                 )
             );
 
-            return $this->success('', array('msorder' => $order->get('id')));
+            return $this->success('', ['msorder' => $order->get('id')]);
         }
     }
 
-
     /**
-    * @param msOrder $order
-    * @param array $params
-    *
-    * @return bool
-    */
-    public function receive(msOrder $order, $params = array())
+     * @param msOrder $order
+     * @param array $params
+     *
+     * @return bool
+     */
+    public function receive(msOrder $order, $params = [])
     {
         if (!empty($params['PAYERID'])) {
-            $params = array(
+            $params = [
                 'METHOD' => 'DoExpressCheckoutPayment',
                 'PAYMENTREQUEST_0_PAYMENTACTION' => 'Sale',
                 'PAYMENTREQUEST_0_AMT' => $params['PAYMENTREQUEST_0_AMT'],
@@ -116,16 +116,18 @@ class PayPal extends msPaymentHandler implements msPaymentInterface
                 'PAYMENTREQUEST_0_CURRENCYCODE' => $params['PAYMENTREQUEST_0_CURRENCYCODE'] ?: $this->config['currency'],
                 'PAYMENTREQUEST_0_ITEMAMT' => $params['PAYMENTREQUEST_0_ITEMAMT'],
                 'PAYMENTREQUEST_0_SHIPPINGAMT' => $params['PAYMENTREQUEST_0_SHIPPINGAMT'],
-            );
+            ];
 
             /** @var msOrderProduct $item */
             $i = 0;
-            if ($this->modx->getOption('ms2_payment_paypal_order_details', null, true)) {
+            $order_details = $this->modx->getOption('ms2_payment_paypal_order_details', null, true);
+            if ($order_details) {
                 $products = $order->getMany('Products');
                 foreach ($products as $item) {
                     /** @var msProduct $product */
+                    $product = $item->getOne('Product');
                     $name = $item->get('name');
-                    if (empty($name) && $product = $item->getOne('Product')) {
+                    if (empty($name) && $product) {
                         $name = $product->get('pagetitle');
                     }
                     $params['L_PAYMENTREQUEST_0_NAME' . $i] = $name;
@@ -138,42 +140,43 @@ class PayPal extends msPaymentHandler implements msPaymentInterface
             $response = $this->request($params);
 
             if (!empty($response['ACK']) && $response['ACK'] == 'Success') {
-                $this->ms2->changeOrderStatus($order->get('id'), 2); // Set status "paid"
+                $status_paid = $this->modx->getOption('ms2_status_paid', null, 2);
+                $this->ms2->changeOrderStatus($order->get('id'), $status_paid); // Set status "paid"
             } else {
                 $this->modx->log(
                     modX::LOG_LEVEL_ERROR,
-                    '[miniShop2] Could not finalize operation: Request: ' . print_r($params, true) .
+                    '[PayPal] Could not finalize operation: Request: ' . print_r($params, true) .
                     ', response: ' . print_r($response, true)
                 );
             }
         } else {
             if ($this->modx->getOption('ms2_payment_paypal_cancel_order', null, false)) {
-                $this->ms2->changeOrderStatus($order->get('id'), 4); // Set status "cancelled"
+                $status_canceled = $this->modx->getOption('ms2_status_canceled', null, 4);
+                $this->ms2->changeOrderStatus($order->get('id'), $status_canceled); // Set status "cancelled"
             }
         }
 
         return true;
     }
 
-
     /**
-    * Building query
-    *
-    * @param array $params Query params
-    *
-    * @return array/boolean
-    */
-    public function request($params = array())
+     * Building query
+     *
+     * @param array $params Query params
+     *
+     * @return array/boolean
+     */
+    public function request($params = [])
     {
-        $requestParams = array_merge(array(
+        $requestParams = array_merge([
             'USER' => $this->config['user'],
             'PWD' => $this->config['password'],
             'SIGNATURE' => $this->config['signature'],
             'VERSION' => '74.0',
-        ), $params);
+        ], $params);
 
         $request = http_build_query($requestParams);
-        $curlOptions = array(
+        $curlOptions = [
             CURLOPT_URL => $this->config['apiUrl'],
             CURLOPT_VERBOSE => 1,
             CURLOPT_SSL_VERIFYPEER => true,
@@ -182,7 +185,7 @@ class PayPal extends msPaymentHandler implements msPaymentInterface
             CURLOPT_RETURNTRANSFER => 1,
             CURLOPT_POST => 1,
             CURLOPT_POSTFIELDS => $request,
-        );
+        ];
 
         $ch = curl_init();
         curl_setopt_array($ch, $curlOptions);
@@ -191,7 +194,7 @@ class PayPal extends msPaymentHandler implements msPaymentInterface
         if (curl_errno($ch)) {
             $result = curl_error($ch);
         } else {
-            $result = array();
+            $result = [];
             parse_str($response, $result);
         }
 
@@ -200,21 +203,20 @@ class PayPal extends msPaymentHandler implements msPaymentInterface
         return $result;
     }
 
-
     /**
-    * Returns a direct link for continue payment process of existing order
-    *
-    * @param msOrder $order
-    *
-    * @return string
-    */
+     * Returns a direct link for continue payment process of existing order
+     *
+     * @param msOrder $order
+     *
+     * @return string
+     */
     public function getPaymentLink(msOrder $order)
     {
         return $this->config['paymentUrl'] . '?' .
-        http_build_query(array(
-            'action' => 'continue',
-            'msorder' => $order->get('id'),
-            'mscode' => $this->getOrderHash($order),
-        ));
+            http_build_query([
+                'action' => 'continue',
+                'msorder' => $order->get('id'),
+                'mscode' => $this->getOrderHash($order),
+            ]);
     }
 }

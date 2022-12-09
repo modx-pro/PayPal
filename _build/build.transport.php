@@ -115,9 +115,9 @@ $builder->putVehicle($vehicle);
 
 /* now pack in the license file, readme and setup options */
 $builder->setPackageAttributes(array(
-    'changelog' => file_get_contents($sources['docs'] . 'changelog.txt')
-, 'license' => file_get_contents($sources['docs'] . 'license.txt')
-, 'readme' => file_get_contents($sources['docs'] . 'readme.txt')
+    'changelog' => file_get_contents($sources['docs'] . 'changelog.txt'),
+    'license' => file_get_contents($sources['docs'] . 'license.txt'),
+    'readme' => file_get_contents($sources['docs'] . 'readme.txt')
 ));
 $modx->log(modX::LOG_LEVEL_INFO, 'Added package attributes and setup options.');
 
